@@ -83,6 +83,19 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
     return trimmedPath.value.getLastPt();
   });
 
+  const matrix = useDerivedValue(()=> {
+    const _matrix = Skia.Matrix();
+    const progress = trim.value * totalProgress;
+    const angle = progress < 1 ? 0 : (progress % 1) * 2 * Math.PI;
+
+    if (angle > 0) {
+      _matrix.translate(center.x, center.y);
+      _matrix.rotate(angle);
+      _matrix.translate(-center.x, -center.y);
+    }
+    return _matrix;
+  })
+  
   useEffect(() => {
     trim.value = withTiming(1, { duration: 3000 });
   }, []);
@@ -94,8 +107,14 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
       <Group clip={clip}>
         <Fill color={background} />
         <Circle c={fullPath.getPoint(0)} r={strokeWidth / 2} color={colors[0]} />
-        <Path path={trimmedPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]} />
-        <Circle c={trimmedPathLastPt} r={strokeWidth / 2} color={colors[0]} />
+        <Path path={trimmedPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]} >
+          <SweepGradient
+            c={center}
+            colors={colors}
+            matrix={matrix}
+          />
+        </Path>
+        <Circle c={trimmedPathLastPt} r={strokeWidth / 2} color={colors[1]} />
       </Group>
     </Group>
   );
