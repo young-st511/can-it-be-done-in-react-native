@@ -21,6 +21,7 @@ uniform shader image;
 uniform vec2 head;
 uniform float progress;
 uniform vec4 color;
+uniform float radius;
 
 vec2 rotate(in vec2 coord, in float angle, vec2 origin) {
   vec2 coord1 = coord - origin;
@@ -30,6 +31,15 @@ vec2 rotate(in vec2 coord, in float angle, vec2 origin) {
 }
 
 vec4 main(vec2 xy) {
+  float d = distance(xy, head);
+  vec2 rotated = rotate(xy, -${Math.PI} - progress * ${2 * Math.PI}, head);
+  if (rotated.y > head.y) {
+    return vec4(0, 0, 0, 0);
+  }
+  if(d > radius) {
+    return vec4(0, 0, 0, smoothstep(radius * 1.65, 0, d));
+  }
+  
   if(progress > 1.0) {
     return color;
   }
@@ -125,6 +135,7 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
 
     return {
       head: head,
+      radius: strokeWidth / 2,
       progress: trim.value * totalProgress,
       color: [...Skia.Color(colors[1])],
     };
@@ -144,12 +155,11 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
         <Path path={trimmedPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]}>
           <SweepGradient c={center} colors={colors} matrix={matrix} />
         </Path>
-        <Circle clip={headClip} c={trimmedPathLastPt} r={strokeWidth / 2} color={colors[1]}>
+        <Fill>
           <Shader source={source} uniforms={uniforms}>
             <SweepGradient c={center} colors={colors} matrix={matrix} />
-            <Shadow dx={0} dy={0} color="black" blur={15} />
           </Shader>
-        </Circle>
+        </Fill>
       </Group>
     </Group>
   );
