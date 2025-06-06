@@ -82,7 +82,9 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
     <Group transform={[{ rotate: -Math.PI / 2 }]} origin={center}>
       <Group clip={clip}>
         <Fill color={background} />
+        <Circle c={fullPath.getPoint(0)} r={strokeWidth / 2} color={colors[0]} />
         <Path path={fullPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]} />
+        <Circle c={fullPath.getLastPt()} r={strokeWidth / 2} color={colors[0]} />
       </Group>
     </Group>
   );
