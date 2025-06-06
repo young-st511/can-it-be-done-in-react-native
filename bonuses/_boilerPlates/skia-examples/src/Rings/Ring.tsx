@@ -10,15 +10,11 @@ import {
   Shader,
   Fill,
   mixColors,
-} from "@shopify/react-native-skia";
-import React, { useEffect, useMemo } from "react";
-import {
-  useDerivedValue,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+} from '@shopify/react-native-skia';
+import React, { useEffect, useMemo } from 'react';
+import { useDerivedValue, useSharedValue, withTiming } from 'react-native-reanimated';
 
-import { frag } from "../components";
+import { frag } from '../components';
 
 const source = frag`
 uniform shader image;
@@ -54,6 +50,8 @@ interface RingProps {
 }
 
 export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgress, colors } }: RingProps) => {
+  const trim = useSharedValue(0);
+
   const emptyRadius = size / 2 - strokeWidth / 2;
 
   const clip = useMemo(() => {
@@ -76,6 +74,19 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
     return path;
   }, []);
 
+  const trimmedPath = useDerivedValue(() => {
+    if (trim.value < 1) return fullPath.copy().trim(0, trim.value, false) ?? fullPath;
+    else return fullPath;
+  });
+
+  const trimmedPathLastPt = useDerivedValue(() => {
+    return trimmedPath.value.getLastPt();
+  });
+
+  useEffect(() => {
+    trim.value = withTiming(1, { duration: 3000 });
+  }, []);
+
   if (!clip) return null;
 
   return (
@@ -83,8 +94,8 @@ export const Ring = ({ center, strokeWidth, ring: { size, background, totalProgr
       <Group clip={clip}>
         <Fill color={background} />
         <Circle c={fullPath.getPoint(0)} r={strokeWidth / 2} color={colors[0]} />
-        <Path path={fullPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]} />
-        <Circle c={fullPath.getLastPt()} r={strokeWidth / 2} color={colors[0]} />
+        <Path path={trimmedPath} strokeWidth={strokeWidth} style={'stroke'} color={colors[0]} />
+        <Circle c={trimmedPathLastPt} r={strokeWidth / 2} color={colors[0]} />
       </Group>
     </Group>
   );
